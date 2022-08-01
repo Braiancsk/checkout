@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { StepsTitle } from "../../components/StepsTitle/StepsTitle";
 import { MdEmail } from "react-icons/md";
 import { BsFillHouseFill } from "react-icons/bs";
@@ -16,6 +16,7 @@ import imgExample from "../../assets/topo.png";
 import { useParams } from "react-router-dom";
 import { api } from "../../services/api";
 import Swal from "sweetalert2";
+import { lightFormat } from "date-fns";
 
 const FirstStepForm = ({ nextStepForm }: FirstStepFormProps) => {
   //states for error
@@ -36,9 +37,21 @@ const FirstStepForm = ({ nextStepForm }: FirstStepFormProps) => {
   const [state, setState] = useState("Estado");
   const [cpf, setCpf] = useState("");
   const [codeIBGE, setCodeIBGE] = useState("");
+  const [date, setDate] = useState("")
 
   const updateFirstFormData = useUpdateFirstFormData();
   const { id } = useParams();
+
+  const handleFormatDate = (e:React.ChangeEvent<HTMLInputElement>) => {
+    if (validateMaskedInput(e.target.value)) {
+      setErrors((currState) => {
+        return currState.filter((err) => err !== "date");
+      });
+    } else {
+      setErrors((currState) => [...currState, "date"]);
+    }
+    setDate(e.target.value)
+  }
 
   const checkForErrors = (error: string) => {
     return errors.find((err) => err === error) ? true : false;
@@ -140,6 +153,7 @@ const FirstStepForm = ({ nextStepForm }: FirstStepFormProps) => {
 
     let userInfo = {
       nome: `${firstName} ${lastName}`,
+      dataNascimento:lightFormat(new Date(date), 'yyyy-MM-dd'),
       email: email,
       cpf: cpf.replace(/[.-]/g, ''),
       telefone: phone.replace(/[()-\s]/g, ''),
@@ -163,7 +177,7 @@ const FirstStepForm = ({ nextStepForm }: FirstStepFormProps) => {
         "https://api.ibigboss.link/api/auth/signup",
         userInfo
       );
-      console.log(userSignupInfoResponse);
+      console.log(userInfo);
 
       const addressUserInfoRespose = await api.post(
         `https://api.ibigboss.link/api/address/${userSignupInfoResponse.data.user.id}/me`,
@@ -219,6 +233,20 @@ const FirstStepForm = ({ nextStepForm }: FirstStepFormProps) => {
             onChange={getEmailInputValue}
             focusPlaceholder="E-mail"
           />
+
+          
+          <div className="mt-3">
+          <MaskedInput
+              error={checkForErrors("date")}
+              mask="99/99/9999"
+              placeholder="__/__/____"
+              type="text"
+              onChange={handleFormatDate}
+              value={date}
+              focusPlaceholder="Sua Data de Nascimento"
+            />
+            </div>
+
 
           <div className="mt-3">
             <MaskedInput
